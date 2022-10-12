@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Insta.Migrations
 {
-    [DbContext(typeof(DBContext))]
+    [DbContext(typeof(RepositoryDbContext))]
     [Migration("20221003164339_InitDB")]
     partial class InitDB
     {

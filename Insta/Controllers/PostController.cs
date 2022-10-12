@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Data;
 using Data.Entities;
+using Data.Repositories.Implementation;
+using Data.Repositories.Interfaces;
+using Insta.Models;
 
 namespace Insta.Controllers
 {
@@ -14,66 +17,112 @@ namespace Insta.Controllers
     [Route("api/[Controller]/[Action]")]
     public class PostController : ControllerBase
     {
-        private readonly DBContext _context;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public PostController(DBContext context)
+        public PostController(RepositoryDbContext context)
         {
-            _context = context;
-        }
-
-        // GET: Post
-        [HttpGet]
-        public async Task<IEnumerable<Post>> Index()
-        {
-            return await _context.Posts.ToListAsync();
+            _unitOfWork = new UnitOfWork(context);
         }
 
         [HttpGet]
-        // GET: Post/Details/5
-        public async Task<Post> Details(int? id)
+        public async Task<ActionResult<object>> GetAllPosts()
         {
-            var post = await _context.Posts
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            return post;
-        }
-        
-        // POST: Post/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        public async Task<Post> Create([Bind("Id,Title,Image")] Post post)
-        {
-            if (ModelState.IsValid)
+            try
             {
-                _context.Add(post);
-                await _context.SaveChangesAsync();
+                var allPosts = await _unitOfWork.PostRepository.GetAll().ToListAsync();
+
+                return new SuccessModel
+                {
+                    Data = allPosts,
+                    Message = "Posts retrieved",
+                    Success = true
+                };
+            }
+            catch (Exception e)
+            {
+                return new ErrorModel
+                {
+                    Error = e.Message,
+                    Success = false
+                };
+            }
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<object>> Create(Post post)
+        {
+            try
+            {
+                _unitOfWork.PostRepository.Create(post);
+                await _unitOfWork.SaveChangesAsync();
+
+                return new SuccessModel
+                {
+                    Data = post,
+                    Message = "Post created",
+                    Success = true
+                };
+            }
+            catch (Exception e)
+            {
+                return new ErrorModel
+                {
+                    Error = e.Message,
+                    Success = false
+                };
+            }
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<object>> Update(Post post)
+        {
+            try
+            {
+                _unitOfWork.PostRepository.Update(post);
+                await _unitOfWork.SaveChangesAsync();
+
+                return new SuccessModel
+                {
+                    Data = post,
+                    Message = "Post updated",
+                    Success = true
+                };
 
             }
-            return post;
-        }
-        
-        // POST: Post/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        public async Task<Post> Edit(int id, [Bind("Id,Title,Image")] Post post)
-        {
-            if (ModelState.IsValid)
+            catch (Exception e)
             {
-                _context.Update(post);
-                await _context.SaveChangesAsync();
+                return new ErrorModel
+                {
+                    Error = e.Message,
+                    Success = false
+                };
             }
-            return post;
         }
-        
-        // POST: Post/Delete/5
-        [HttpPost]
-        public async Task Delete(int id)
+
+        [HttpDelete]
+        public async Task<ActionResult<object>> Delete(int id)
         {
-            var post = await _context.Posts.FindAsync(id);
-            _context.Posts.Remove(post);
-            await _context.SaveChangesAsync();
+            try
+            {
+                Post post = _unitOfWork.PostRepository.GetById(id);
+                _unitOfWork.PostRepository.Delete(post);
+                await _unitOfWork.SaveChangesAsync();
+
+                return new SuccessModel
+                {
+                    Data = post,
+                    Message = "Post deleted",
+                    Success = true
+                };
+            }
+            catch (Exception e)
+            {
+                return new ErrorModel
+                {
+                    Error = e.Message,
+                    Success = false
+                };
+            }
         }
     }
 }

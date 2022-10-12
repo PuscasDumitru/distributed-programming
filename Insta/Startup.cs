@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Data;
 using HealthChecks.UI.Client;
+using Insta.Filters;
 using Insta.HealthChecks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -46,7 +47,7 @@ namespace Insta
                 };
             });
 
-            services.AddDbContext<DBContext>(options =>
+            services.AddDbContext<RepositoryDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection"),
                 b => b.MigrationsAssembly("Insta")));
@@ -55,7 +56,10 @@ namespace Insta
                 .AddCheck<ResponseTimeHealthCheck>("Network speed test", null);
 
             services.AddSingleton<ResponseTimeHealthCheck>();
-            services.AddControllers();
+            services.AddControllers(options =>
+            {
+                options.Filters.Add<ExceptionFilter>();
+            });
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Insta", Version = "v1" });
