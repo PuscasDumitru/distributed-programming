@@ -15,25 +15,26 @@ namespace Insta.Controllers
 {
     [ApiController]
     [Route("api/[Controller]/[Action]")]
-    public class PostController : ControllerBase
+    public class GroupController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
-        public PostController(RepositoryDbContext context)
+
+        public GroupController(RepositoryDbContext context)
         {
             _unitOfWork = new UnitOfWork(context);
         }
 
         [HttpGet]
-        public async Task<ActionResult<object>> GetAllPosts()
+        public async Task<ActionResult<object>> GetAllGroups()
         {
             try
             {
-                var allPosts = await _unitOfWork.PostRepository.GetAll().ToListAsync();
+                var allGroups = await _unitOfWork.PostRepository.GetAll().ToListAsync();
 
                 return new SuccessModel
                 {
-                    Data = allPosts,
-                    Message = "Posts retrieved",
+                    Data = allGroups,
+                    Message = "Groups retrieved",
                     Success = true
                 };
             }
@@ -48,17 +49,17 @@ namespace Insta.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<object>> Create(Post post)
+        public async Task<ActionResult<object>> Create(Group group)
         {
             try
             {
-                _unitOfWork.PostRepository.Create(post);
+                _unitOfWork.PostRepository.Create(group);
                 await _unitOfWork.SaveChangesAsync();
 
                 return new SuccessModel
                 {
-                    Data = post,
-                    Message = "Post created",
+                    Data = group,
+                    Message = "Group created",
                     Success = true
                 };
             }
@@ -73,17 +74,17 @@ namespace Insta.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<object>> Update(Post post)
+        public async Task<ActionResult<object>> Update(Group group)
         {
             try
             {
-                _unitOfWork.PostRepository.Update(post);
+                _unitOfWork.PostRepository.Update(group);
                 await _unitOfWork.SaveChangesAsync();
 
                 return new SuccessModel
                 {
-                    Data = post,
-                    Message = "Post updated",
+                    Data = group,
+                    Message = "Group updated",
                     Success = true
                 };
 
@@ -103,14 +104,14 @@ namespace Insta.Controllers
         {
             try
             {
-                Post post = _unitOfWork.PostRepository.GetById(id);
-                _unitOfWork.PostRepository.Delete(post);
+                Post post = _unitOfWork.GroupRepository.GetById(id);
+                _unitOfWork.GroupRepository.Delete(post);
                 await _unitOfWork.SaveChangesAsync();
 
                 return new SuccessModel
                 {
                     Data = post,
-                    Message = "Post deleted",
+                    Message = "Group deleted",
                     Success = true
                 };
             }
