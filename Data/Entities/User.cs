@@ -11,6 +11,6 @@ namespace Data.Entities
         public int Id { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
-        public virtual ICollection<Post> Post { get; set; }
+        //public virtual ICollection<Post> Post { get; set; }
     }
 }

@@ -20,6 +20,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Insta.Helpers;
+using Insta.Interfaces;
+using Insta.Services;
 
 namespace Insta
 {
@@ -35,6 +38,10 @@ namespace Insta
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
+            services.AddScoped<IPhotoService, PhotoService>();
+            services.AddAutoMapper(typeof(Program).Assembly);
+
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
@@ -56,10 +63,15 @@ namespace Insta
                 .AddCheck<ResponseTimeHealthCheck>("Network speed test", null);
 
             services.AddSingleton<ResponseTimeHealthCheck>();
+
             services.AddControllers(options =>
             {
                 options.Filters.Add<ExceptionFilter>();
-            });
+            })
+                .AddNewtonsoftJson(options =>
+                  options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+                    );
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Insta", Version = "v1" });
@@ -86,9 +98,9 @@ namespace Insta
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHealthChecks("/health", new HealthCheckOptions()
-                    {
-                        ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-                    }
+                {
+                    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+                }
                 );
                 endpoints.MapControllers();
             });

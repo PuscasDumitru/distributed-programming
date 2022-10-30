@@ -10,6 +10,10 @@ using Data.Entities;
 using Data.Repositories.Implementation;
 using Data.Repositories.Interfaces;
 using Insta.Models;
+using Microsoft.AspNetCore.Http;
+using Insta.Interfaces;
+using AutoMapper;
+using Insta.DTOs;
 
 namespace Insta.Controllers
 {
@@ -18,9 +22,13 @@ namespace Insta.Controllers
     public class PostController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
-        public PostController(RepositoryDbContext context)
+        private readonly IPhotoService _photoService;
+        private readonly IMapper _mapper;
+        public PostController(RepositoryDbContext context, IPhotoService photoService, IMapper mapper)
         {
             _unitOfWork = new UnitOfWork(context);
+            _photoService = photoService;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -111,6 +119,42 @@ namespace Insta.Controllers
                 {
                     Data = post,
                     Message = "Post deleted",
+                    Success = true
+                };
+            }
+            catch (Exception e)
+            {
+                return new ErrorModel
+                {
+                    Error = e.Message,
+                    Success = false
+                };
+            }
+        }
+
+        [HttpPost("add-photo")]
+        public async Task<ActionResult<object>> AddPhoto(IFormFile file, int postId)
+        {
+            try
+            {
+                var post = await _unitOfWork.PostRepository.GetPostByIdAsync(postId);
+                var result = _photoService.AddPhotoAsync(file);
+
+                var photo = new Photo
+                {
+                    Url = result.Result.SecureUrl.AbsoluteUri,
+                    PublicId = result.Result.PublicId
+                };
+
+                post.Photos.Add(photo);
+                //_mapper.Map<PhotoDto>(photo);
+
+                await _unitOfWork.SaveChangesAsync();
+
+                return new SuccessModel
+                {
+                    Data = photo,
+                    Message = "Photo added",
                     Success = true
                 };
             }

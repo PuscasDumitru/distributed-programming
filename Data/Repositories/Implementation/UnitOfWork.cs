@@ -13,7 +13,7 @@ namespace Data.Repositories.Implementation
     {
         readonly RepositoryDbContext _dbContext;
         GenericRepository<User> _userRepository;
-        GenericRepository<Post> _postRepository;
+        PostRepository _postRepository;
        
         public UnitOfWork(RepositoryDbContext dbContext) => _dbContext = dbContext;
 
@@ -26,11 +26,11 @@ namespace Data.Repositories.Implementation
             }
         }
 
-        public GenericRepository<Post> PostRepository
+        public PostRepository PostRepository
         {
             get
             {
-                _postRepository ??= new GenericRepository<Post>(_dbContext);
+                _postRepository ??= new PostRepository(_dbContext);
                 return _postRepository;
             }
         }

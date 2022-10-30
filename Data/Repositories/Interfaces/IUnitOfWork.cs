@@ -12,7 +12,7 @@ namespace Data.Repositories.Interfaces
     public interface IUnitOfWork
     {
         GenericRepository<User> UserRepository { get; }
-        GenericRepository<Post> PostRepository { get; }
+        PostRepository PostRepository { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }
