@@ -23,12 +23,10 @@ namespace Insta.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPhotoService _photoService;
-        private readonly IMapper _mapper;
-        public PostController(RepositoryDbContext context, IPhotoService photoService, IMapper mapper)
+        public PostController(RepositoryDbContext context, IPhotoService photoService)
         {
             _unitOfWork = new UnitOfWork(context);
             _photoService = photoService;
-            _mapper = mapper;
         }
 
         [HttpGet]
