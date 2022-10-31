@@ -1,21 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
 using Data;
 using Data.Entities;
 using Data.Repositories.Implementation;
 using Data.Repositories.Interfaces;
-using Insta.Models;
-using Microsoft.AspNetCore.Http;
 using Insta.Interfaces;
-using AutoMapper;
-using Insta.DTOs;
+using Insta.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using StackExchange.Redis;
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Insta.Controllers
 {
@@ -27,6 +25,7 @@ namespace Insta.Controllers
         private readonly IPhotoService _photoService;
         private readonly IMapper _mapper;
         private readonly IConnectionMultiplexer _redis;
+        private const int Timeout = 1000;
 
         public PostController(RepositoryDbContext context, IPhotoService photoService, IMapper mapper, IConnectionMultiplexer redis)
         {
@@ -98,20 +97,36 @@ namespace Insta.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<object>> Create(Post post)
         {
             try
             {
-                _unitOfWork.PostRepository.Create(post);
-                await _unitOfWork.SaveChangesAsync();
-                var db = _redis.GetDatabase();
-                db.StringSet($"post:{post.Id}", JsonConvert.SerializeObject(post), TimeSpan.FromMinutes(1));
-                return new SuccessModel
+                var createPostTask = Task.Run(async () =>
                 {
-                    Data = post,
-                    Message = "Post created",
-                    Success = true
+                    _unitOfWork.PostRepository.Create(post);
+                    await _unitOfWork.SaveChangesAsync();
+                    var db = _redis.GetDatabase();
+                    db.StringSet($"post:{post.Id}", JsonConvert.SerializeObject(post), TimeSpan.FromMinutes(1));
+                    return new SuccessModel
+                    {
+                        Data = post,
+                        Message = "Post created",
+                        Success = true
+                    };
+                });
+
+                if (await Task.WhenAny(createPostTask, Task.Delay(Timeout)) == createPostTask)
+                {
+                    return await createPostTask;
+                }
+
+                return new ErrorModel()
+                {
+                    Success = false,
+                    Error = "Task timeout"
                 };
+
             }
             catch (Exception e)
             {
@@ -124,21 +139,35 @@ namespace Insta.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<object>> Update(Post post)
         {
             try
             {
-                _unitOfWork.PostRepository.Update(post);
-                await _unitOfWork.SaveChangesAsync();
-                var db = _redis.GetDatabase();
-                db.StringSet($"post:{post.Id}", JsonConvert.SerializeObject(post), TimeSpan.FromMinutes(1));
-                return new SuccessModel
+                var updatePostTask = Task.Run(async () =>
                 {
-                    Data = post,
-                    Message = "Post updated",
-                    Success = true
-                };
+                    _unitOfWork.PostRepository.Update(post);
+                    await _unitOfWork.SaveChangesAsync();
+                    var db = _redis.GetDatabase();
+                    db.StringSet($"post:{post.Id}", JsonConvert.SerializeObject(post), TimeSpan.FromMinutes(1));
+                    return new SuccessModel
+                    {
+                        Data = post,
+                        Message = "Post updated",
+                        Success = true
+                    };
+                });
 
+                if (await Task.WhenAny(updatePostTask, Task.Delay(Timeout)) == updatePostTask)
+                {
+                    return await updatePostTask;
+                }
+
+                return new ErrorModel()
+                {
+                    Success = false,
+                    Error = "Task timeout"
+                };
             }
             catch (Exception e)
             {
@@ -151,19 +180,34 @@ namespace Insta.Controllers
         }
 
         [HttpDelete]
+        [Authorize]
         public async Task<ActionResult<object>> Delete(int id)
         {
             try
             {
-                Post post = _unitOfWork.PostRepository.GetById(id);
-                _unitOfWork.PostRepository.Delete(post);
-                await _unitOfWork.SaveChangesAsync();
-
-                return new SuccessModel
+                var deletePostTask = Task.Run(async () =>
                 {
-                    Data = post,
-                    Message = "Post deleted",
-                    Success = true
+                    Post post = _unitOfWork.PostRepository.GetById(id);
+                    _unitOfWork.PostRepository.Delete(post);
+                    await _unitOfWork.SaveChangesAsync();
+
+                    return new SuccessModel
+                    {
+                        Data = post,
+                        Message = "Post deleted",
+                        Success = true
+                    };
+                });
+
+                if (await Task.WhenAny(deletePostTask, Task.Delay(Timeout)) == deletePostTask)
+                {
+                    return await deletePostTask;
+                }
+
+                return new ErrorModel()
+                {
+                    Success = false,
+                    Error = "Task timeout"
                 };
             }
             catch (Exception e)
