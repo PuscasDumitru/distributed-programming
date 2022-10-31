@@ -11,8 +11,7 @@ namespace Data
     public class RepositoryDbContext : DbContext
     {
         public RepositoryDbContext(DbContextOptions options) : base(options) { }
-
-        public DbSet<User> Users { get; set; }
+        
         public DbSet<Post> Posts { get; set; }
         //public DbSet<Photo> Photos { get; set; }
     }

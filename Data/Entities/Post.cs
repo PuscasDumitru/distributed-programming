@@ -12,6 +12,8 @@ namespace Data.Entities
         public string Title { get; set; }
         public string Image { get; set; }
 
+        public Guid UserId { get; set; }
+
         public ICollection<Photo> Photos { get; set; }
     }
 }

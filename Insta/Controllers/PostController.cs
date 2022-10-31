@@ -8,10 +8,13 @@ using Insta.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using StackExchange.Redis;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -40,7 +43,7 @@ namespace Insta.Controllers
         {
             try
             {
-                
+
                 var allPosts = await _unitOfWork.PostRepository.GetAllPostsAsync();
 
                 return new SuccessModel
@@ -104,6 +107,13 @@ namespace Insta.Controllers
             {
                 var createPostTask = Task.Run(async () =>
                 {
+                    if (HttpContext.User.Identity is ClaimsIdentity identity)
+                    {
+                        IEnumerable<Claim> claims = identity.Claims;
+                        var userName = identity.FindFirst("userName").Value;
+                        var userId = identity.FindFirst("userId").Value;
+                        post.UserId = new Guid(userId);
+                    }
                     _unitOfWork.PostRepository.Create(post);
                     await _unitOfWork.SaveChangesAsync();
                     var db = _redis.GetDatabase();
@@ -146,6 +156,14 @@ namespace Insta.Controllers
             {
                 var updatePostTask = Task.Run(async () =>
                 {
+                    if (HttpContext.User.Identity is ClaimsIdentity identity)
+                    {
+                        IEnumerable<Claim> claims = identity.Claims;
+                        var userName = identity.FindFirst("userName").Value;
+                        var userId = identity.FindFirst("userId").Value;
+                        post.UserId = new Guid(userId);
+                    }
+
                     _unitOfWork.PostRepository.Update(post);
                     await _unitOfWork.SaveChangesAsync();
                     var db = _redis.GetDatabase();
@@ -202,6 +220,68 @@ namespace Insta.Controllers
                 if (await Task.WhenAny(deletePostTask, Task.Delay(Timeout)) == deletePostTask)
                 {
                     return await deletePostTask;
+                }
+
+                return new ErrorModel()
+                {
+                    Success = false,
+                    Error = "Task timeout"
+                };
+            }
+            catch (Exception e)
+            {
+                return new ErrorModel
+                {
+                    Error = e.Message,
+                    Success = false
+                };
+            }
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<ActionResult<object>> GetPostsByUserId()
+        {
+            try
+            {
+                var updatePostTask = Task.Run(async () =>
+                {
+                    if (HttpContext.User.Identity is ClaimsIdentity identity)
+                    {
+                        IEnumerable<Claim> claims = identity.Claims;
+                        var userId = identity.FindFirst("userId").Value;
+                        var db = _redis.GetDatabase();
+                        var result = new SuccessModel()
+                        {
+                            Message = "Posts retrived",
+                            Success = true
+                        };
+
+                        string serializedPosts = db.StringGet($"posts:{userId}");
+
+                        if (serializedPosts == null)
+                        {
+                            var posts = await _unitOfWork.PostRepository.GetPostByUserIdAsync(new Guid(userId));
+                            await _unitOfWork.SaveChangesAsync();
+                            db.StringSet($"posts:{userId}", JsonConvert.SerializeObject(posts), TimeSpan.FromMinutes(1));
+                            result.Data = posts;
+                            return result;
+                        }
+
+                        result.Data = serializedPosts;
+                        return result;
+                    }
+
+                    return new SuccessModel()
+                    {
+                        Success = false,
+                        Message = "Claim userId missing"
+                    };
+                });
+
+                if (await Task.WhenAny(updatePostTask, Task.Delay(Timeout)) == updatePostTask)
+                {
+                    return await updatePostTask;
                 }
 
                 return new ErrorModel()
