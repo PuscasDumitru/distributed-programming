@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Http;
 using Insta.Interfaces;
 using AutoMapper;
 using Insta.DTOs;
+using Newtonsoft.Json;
+using StackExchange.Redis;
 
 namespace Insta.Controllers
 {
@@ -24,11 +26,14 @@ namespace Insta.Controllers
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPhotoService _photoService;
         private readonly IMapper _mapper;
-        public PostController(RepositoryDbContext context, IPhotoService photoService, IMapper mapper)
+        private readonly IConnectionMultiplexer _redis;
+
+        public PostController(RepositoryDbContext context, IPhotoService photoService, IMapper mapper, IConnectionMultiplexer redis)
         {
             _unitOfWork = new UnitOfWork(context);
             _photoService = photoService;
             _mapper = mapper;
+            _redis = redis;
         }
 
         [HttpGet]
@@ -36,6 +41,7 @@ namespace Insta.Controllers
         {
             try
             {
+                
                 var allPosts = await _unitOfWork.PostRepository.GetAllPostsAsync();
 
                 return new SuccessModel
@@ -60,8 +66,20 @@ namespace Insta.Controllers
         {
             try
             {
-                var post = await _unitOfWork.PostRepository.GetPostByIdAsync(postId);
+                var db = _redis.GetDatabase();
+                string serializedPost = db.StringGet($"post:{postId}");
+                if (serializedPost != null)
+                {
+                    return new SuccessModel
+                    {
+                        Data = serializedPost,
+                        Message = "Post retrieved",
+                        Success = true
+                    };
+                }
 
+                var post = await _unitOfWork.PostRepository.GetPostByIdAsync(postId);
+                db.StringSet($"post:{postId}", JsonConvert.SerializeObject(post), TimeSpan.FromMinutes(1));
                 return new SuccessModel
                 {
                     Data = post,
@@ -86,7 +104,8 @@ namespace Insta.Controllers
             {
                 _unitOfWork.PostRepository.Create(post);
                 await _unitOfWork.SaveChangesAsync();
-
+                var db = _redis.GetDatabase();
+                db.StringSet($"post:{post.Id}", JsonConvert.SerializeObject(post), TimeSpan.FromMinutes(1));
                 return new SuccessModel
                 {
                     Data = post,
@@ -111,7 +130,8 @@ namespace Insta.Controllers
             {
                 _unitOfWork.PostRepository.Update(post);
                 await _unitOfWork.SaveChangesAsync();
-
+                var db = _redis.GetDatabase();
+                db.StringSet($"post:{post.Id}", JsonConvert.SerializeObject(post), TimeSpan.FromMinutes(1));
                 return new SuccessModel
                 {
                     Data = post,
