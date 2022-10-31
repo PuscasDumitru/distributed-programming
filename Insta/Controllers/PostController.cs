@@ -55,6 +55,30 @@ namespace Insta.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<ActionResult<object>> GetPostByIdAsync(int postId)
+        {
+            try
+            {
+                var post = await _unitOfWork.PostRepository.GetPostByIdAsync(postId);
+
+                return new SuccessModel
+                {
+                    Data = post,
+                    Message = "Post retrieved",
+                    Success = true
+                };
+            }
+            catch (Exception e)
+            {
+                return new ErrorModel
+                {
+                    Error = e.Message,
+                    Success = false
+                };
+            }
+        }
+
         [HttpPost]
         public async Task<ActionResult<object>> Create(Post post)
         {
@@ -147,7 +171,6 @@ namespace Insta.Controllers
                 };
 
                 post.Photos.Add(photo);
-                //_mapper.Map<PhotoDto>(photo);
 
                 await _unitOfWork.SaveChangesAsync();
 
@@ -206,9 +229,6 @@ namespace Insta.Controllers
                     Success = false
                 };
             }
-
-           
-            
         }
     }
 }
