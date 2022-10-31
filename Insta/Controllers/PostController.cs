@@ -36,7 +36,7 @@ namespace Insta.Controllers
         {
             try
             {
-                var allPosts = await _unitOfWork.PostRepository.GetAll().ToListAsync();
+                var allPosts = await _unitOfWork.PostRepository.GetAllPostsAsync();
 
                 return new SuccessModel
                 {
@@ -166,6 +166,49 @@ namespace Insta.Controllers
                     Success = false
                 };
             }
+        }
+
+        [HttpDelete("delete-photo/{photoId}")]
+        public async Task<ActionResult<object>> DeletePhoto(int postId, int photoId)
+        {
+
+            try
+            {
+                var post = await _unitOfWork.PostRepository.GetPostByIdAsync(postId);
+
+                var photo = post.Photos.FirstOrDefault(x => x.Id == photoId);
+
+                if (photo == null) return NotFound();
+
+                if (photo.PublicId != null)
+                {
+                    var result = await _photoService.DeletePhotoAsync(photo.PublicId);
+
+                    if (result.Error != null) return BadRequest(result.Error.Message);
+                }
+
+                post.Photos.Remove(photo);
+
+                await _unitOfWork.SaveChangesAsync();
+
+                return new SuccessModel
+                {
+                    Data = photo,
+                    Message = "Photo deleted",
+                    Success = true
+                };
+            }
+            catch (Exception e)
+            {
+                return new ErrorModel
+                {
+                    Error = e.Message,
+                    Success = false
+                };
+            }
+
+           
+            
         }
     }
 }

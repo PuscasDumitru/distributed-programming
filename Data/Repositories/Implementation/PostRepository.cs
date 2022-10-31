@@ -21,5 +21,13 @@ namespace Data.Repositories.Implementation
                 .Include(p => p.Photos)
                 .SingleOrDefaultAsync(x => x.Id == postId);
         }
+
+        public async Task<IEnumerable<Post>> GetAllPostsAsync()
+        {
+            return await RepositoryContext.Posts
+                .Include(p => p.Photos)
+                .ToListAsync();
+                
+        }
     }
 }
