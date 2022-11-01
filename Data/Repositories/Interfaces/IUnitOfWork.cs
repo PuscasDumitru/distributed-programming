@@ -11,7 +11,6 @@ namespace Data.Repositories.Interfaces
 {
     public interface IUnitOfWork
     {
-        GenericRepository<User> UserRepository { get; }
         PostRepository PostRepository { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }

@@ -23,6 +23,7 @@ using Microsoft.IdentityModel.Tokens;
 using Insta.Helpers;
 using Insta.Interfaces;
 using Insta.Services;
+using StackExchange.Redis;
 
 namespace Insta
 {
@@ -43,21 +44,24 @@ namespace Insta
             services.AddAutoMapper(typeof(Program).Assembly);
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
+                .AddJwtBearer(options =>
                 {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["TokenKey"])),
-                    ValidateIssuer = false,
-                    ValidateAudience = false
-                };
-            });
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["TokenKey"])),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                    };
+                    options.IncludeErrorDetails = true;
+                });
 
             services.AddDbContext<RepositoryDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection"),
                 b => b.MigrationsAssembly("Insta")));
+            services.AddSingleton<IConnectionMultiplexer>(opt =>
+                ConnectionMultiplexer.Connect(Configuration.GetConnectionString("RedisConnection")));
 
             services.AddHealthChecks()
                 .AddCheck<ResponseTimeHealthCheck>("Network speed test", null);

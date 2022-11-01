@@ -8,14 +8,12 @@ using Insta.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Insta.Controllers
@@ -28,7 +26,7 @@ namespace Insta.Controllers
         private readonly IPhotoService _photoService;
         private readonly IMapper _mapper;
         private readonly IConnectionMultiplexer _redis;
-        private const int Timeout = 1000;
+        private const int Timeout = 4000;
 
         public PostController(RepositoryDbContext context, IPhotoService photoService, IMapper mapper, IConnectionMultiplexer redis)
         {
