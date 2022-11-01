@@ -22,12 +22,19 @@ namespace Data.Repositories.Implementation
                 .SingleOrDefaultAsync(x => x.Id == postId);
         }
 
+        public async Task<IEnumerable<Post>> GetPostByUserIdAsync(Guid userId)
+        {
+            return await RepositoryContext.Posts
+                .Include(p => p.Photos)
+                .Where(p => p.UserId == userId).ToListAsync();
+        }
+
         public async Task<IEnumerable<Post>> GetAllPostsAsync()
         {
             return await RepositoryContext.Posts
                 .Include(p => p.Photos)
                 .ToListAsync();
-                
+
         }
     }
 }

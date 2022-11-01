@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.2.32616.157
+VisualStudioVersion = 17.3.32819.101
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Insta", "Insta\Insta.csproj", "{DA6C18CD-170F-4709-A285-38E5FB90F8FB}"
 EndProject
@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Data", "Data\Data.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HealthChecker", "HealthChecker\HealthChecker.csproj", "{9D972EBA-0415-42C9-8C18-2644B86D3EE8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insta.Tests", "Insta.Tests\Insta.Tests.csproj", "{E048F5D4-AC96-488A-9229-F79FB4C911BA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthService", "..\..\Teza\AuthService\AuthService\AuthService\AuthService.csproj", "{E2A83EEA-EEFC-41BC-B4C9-E6EC5C58463D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +29,10 @@ Global
 		{9D972EBA-0415-42C9-8C18-2644B86D3EE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9D972EBA-0415-42C9-8C18-2644B86D3EE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9D972EBA-0415-42C9-8C18-2644B86D3EE8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E048F5D4-AC96-488A-9229-F79FB4C911BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E048F5D4-AC96-488A-9229-F79FB4C911BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E048F5D4-AC96-488A-9229-F79FB4C911BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E048F5D4-AC96-488A-9229-F79FB4C911BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2A83EEA-EEFC-41BC-B4C9-E6EC5C58463D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2A83EEA-EEFC-41BC-B4C9-E6EC5C58463D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2A83EEA-EEFC-41BC-B4C9-E6EC5C58463D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2A83EEA-EEFC-41BC-B4C9-E6EC5C58463D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

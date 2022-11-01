@@ -12,19 +12,10 @@ namespace Data.Repositories.Implementation
     public class UnitOfWork : IUnitOfWork
     {
         readonly RepositoryDbContext _dbContext;
-        GenericRepository<User> _userRepository;
         PostRepository _postRepository;
+        GroupRepository _groupRepository;
        
         public UnitOfWork(RepositoryDbContext dbContext) => _dbContext = dbContext;
-
-        public GenericRepository<User> UserRepository
-        {
-            get
-            {
-                _userRepository ??= new GenericRepository<User>(_dbContext);
-                return _userRepository;
-            }
-        }
 
         public PostRepository PostRepository
         {
@@ -32,6 +23,15 @@ namespace Data.Repositories.Implementation
             {
                 _postRepository ??= new PostRepository(_dbContext);
                 return _postRepository;
+            }
+        }
+
+        public GroupRepository GroupRepository
+        {
+            get
+            {
+                _groupRepository ??= new GroupRepository(_dbContext);
+                return _groupRepository;
             }
         }
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>

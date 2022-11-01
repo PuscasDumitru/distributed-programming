@@ -10,7 +10,11 @@ namespace Data.Entities
     {
         public int Id { get; set; }
         public string Title { get; set; }
-        public string Image { get; set; }
+        public string Content { get; set; }
+
+        public Guid UserId { get; set; }
+        public Group Group { get; set; }
+        public int GroupId { get; set; }
 
         public ICollection<Photo> Photos { get; set; }
     }
