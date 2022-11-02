@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
+using Newtonsoft.Json;
 using StackExchange.Redis;
 
 namespace Insta.Tests
@@ -35,7 +36,7 @@ namespace Insta.Tests
 
             using (var context = new RepositoryDbContext(options))
             {
-                var controller = new PostController(context, mockPhotoService.Object, mockMapper.Object, mockRedis.Object);
+                var controller = new PostController(context, mockPhotoService.Object, mockRedis.Object);
 
                 var result = await controller.GetAllPosts();
                 var actionResult = Assert.IsType<ActionResult<object>>(result);
@@ -51,27 +52,38 @@ namespace Insta.Tests
         {
             var testPostId = 99;
             var mockPhotoService = new Mock<IPhotoService>();
-            var mockMapper = new Mock<IMapper>();
-            var mockRedis = new Mock<IConnectionMultiplexer>();
-            
+
+
+            var mockMultiplexer = new Mock<IConnectionMultiplexer>();
+            mockMultiplexer.Setup(_ => _.IsConnected).Returns(false);
+
+            var mockDatabase = new Mock<IDatabase>();
+            mockDatabase
+                .Setup(db => db.StringGet($"post:{testPostId}", default))
+                .Returns(JsonConvert.SerializeObject(new Post { Id = testPostId, Title = "something" }));
+
+            mockMultiplexer
+                .Setup(_ => _.GetDatabase(It.IsAny<int>(), It.IsAny<object>()))
+                .Returns(mockDatabase.Object);
+
             var options = new DbContextOptionsBuilder<RepositoryDbContext>()
                 .UseInMemoryDatabase(databaseName: "PostListDatabase")
                 .Options;
 
-            using (var context = new RepositoryDbContext(options))
+            await using (var context = new RepositoryDbContext(options))
             {
                 context.Posts.Add(new Post { Id = testPostId, Title = "something" });
-                context.SaveChanges();
+                await context.SaveChangesAsync();
             }
 
-            using (var context = new RepositoryDbContext(options))
+            await using (var context = new RepositoryDbContext(options))
             {
-                var controller = new PostController(context, mockPhotoService.Object, mockMapper.Object, mockRedis.Object);
+                var controller = new PostController(context, mockPhotoService.Object, mockMultiplexer.Object);
 
                 var result = await controller.GetPostByIdAsync(testPostId);
                 var actionResult = Assert.IsType<ActionResult<object>>(result);
                 var returnValue = Assert.IsType<SuccessModel>(actionResult.Value);
-                var extractedPost = Assert.IsAssignableFrom<Post>(returnValue.Data);
+                var extractedPost = JsonConvert.DeserializeObject<Post>(returnValue.Data.ToString());
 
                 Assert.Equal(testPostId, extractedPost.Id);
             }
@@ -98,7 +110,7 @@ namespace Insta.Tests
 
             using (var context = new RepositoryDbContext(options))
             {
-                var controller = new PostController(context, mockPhotoService.Object, mockMapper.Object, mockRedis.Object);
+                var controller = new PostController(context, mockPhotoService.Object, mockRedis.Object);
 
                 var result = await controller.AddPhoto(mockFormFile.Object, testPostId);
                 var actionResult = Assert.IsType<ActionResult<object>>(result);
@@ -132,7 +144,7 @@ namespace Insta.Tests
 
             using (var context = new RepositoryDbContext(options))
             {
-                var controller = new PostController(context, mockPhotoService.Object, mockMapper.Object, mockRedis.Object);
+                var controller = new PostController(context, mockPhotoService.Object, mockRedis.Object);
 
                 var result = await controller.DeletePhoto(testPostId, testPhotoId);
                 var actionResult = Assert.IsType<ActionResult<object>>(result);

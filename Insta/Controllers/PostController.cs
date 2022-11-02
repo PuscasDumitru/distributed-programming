@@ -24,15 +24,13 @@ namespace Insta.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPhotoService _photoService;
-        private readonly IMapper _mapper;
         private readonly IConnectionMultiplexer _redis;
         private const int Timeout = 4000;
 
-        public PostController(RepositoryDbContext context, IPhotoService photoService, IMapper mapper, IConnectionMultiplexer redis)
+        public PostController(RepositoryDbContext context, IPhotoService photoService,  IConnectionMultiplexer redis)
         {
             _unitOfWork = new UnitOfWork(context);
             _photoService = photoService;
-            _mapper = mapper;
             _redis = redis;
         }
 
