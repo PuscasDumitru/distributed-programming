@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace Data.Entities
 {
+    [JsonObject(IsReference = true)]
     public class Post
     {
         public int Id { get; set; }
@@ -14,7 +16,7 @@ namespace Data.Entities
 
         public Guid UserId { get; set; }
         public Group Group { get; set; }
-        public int GroupId { get; set; }
+        public int? GroupId { get; set; }
 
         public ICollection<Photo> Photos { get; set; }
     }

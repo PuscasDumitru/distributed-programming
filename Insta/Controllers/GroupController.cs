@@ -53,7 +53,7 @@ namespace Insta.Controllers
         {
             try
             {
-                var allGroups = await _unitOfWork.GroupRepository.GetAllGroupsByUserIdAsync();
+                var allGroups = await _unitOfWork.GroupRepository.GetAllGroupsByUserIdAsync(new Guid());
 
                 return new SuccessModel
                 {
@@ -77,7 +77,7 @@ namespace Insta.Controllers
         {
             try
             {
-                _unitOfWork.PostRepository.Create(group);
+                _unitOfWork.GroupRepository.Create(group);
                 await _unitOfWork.SaveChangesAsync();
 
                 return new SuccessModel
@@ -102,7 +102,7 @@ namespace Insta.Controllers
         {
             try
             {
-                _unitOfWork.PostRepository.Update(group);
+                _unitOfWork.GroupRepository.Update(group);
                 await _unitOfWork.SaveChangesAsync();
 
                 return new SuccessModel
@@ -128,13 +128,13 @@ namespace Insta.Controllers
         {
             try
             {
-                Post post = _unitOfWork.GroupRepository.GetById(id);
-                _unitOfWork.GroupRepository.Delete(post);
+                Group group = _unitOfWork.GroupRepository.GetById(id);
+                _unitOfWork.GroupRepository.Delete(group);
                 await _unitOfWork.SaveChangesAsync();
 
                 return new SuccessModel
                 {
-                    Data = post,
+                    Data = group,
                     Message = "Group deleted",
                     Success = true
                 };

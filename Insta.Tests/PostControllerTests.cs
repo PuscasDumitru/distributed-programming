@@ -28,8 +28,8 @@ namespace Insta.Tests
 
             using (var context = new RepositoryDbContext(options))
             {
-                context.Posts.Add(new Post { Id = 1, Title = "something", Image = "something" });
-                context.Posts.Add(new Post { Id = 2, Title = "something else", Image = "something else" });
+                context.Posts.Add(new Post { Id = 99, Title = "something" });
+                context.Posts.Add(new Post { Id = 100, Title = "something else" });
                 context.SaveChanges();
             }
 
@@ -49,7 +49,7 @@ namespace Insta.Tests
         [Fact]
         public async void GetPostByIdAsync_ReturnsAPostById()
         {
-            var testPostId = 1;
+            var testPostId = 99;
             var mockPhotoService = new Mock<IPhotoService>();
             var mockMapper = new Mock<IMapper>();
             var mockRedis = new Mock<IConnectionMultiplexer>();
@@ -60,7 +60,7 @@ namespace Insta.Tests
 
             using (var context = new RepositoryDbContext(options))
             {
-                context.Posts.Add(new Post { Id = testPostId, Title = "something", Image = "something" });
+                context.Posts.Add(new Post { Id = testPostId, Title = "something" });
                 context.SaveChanges();
             }
 
@@ -80,7 +80,7 @@ namespace Insta.Tests
         [Fact]
         public async void AddPhoto_ReturnsANewPhoto()
         {
-            var testPostId = 1;
+            var testPostId = 99;
             var mockPhotoService = new Mock<IPhotoService>();
             var mockMapper = new Mock<IMapper>();
             var mockRedis = new Mock<IConnectionMultiplexer>();
@@ -92,7 +92,7 @@ namespace Insta.Tests
 
             using (var context = new RepositoryDbContext(options))
             {
-                context.Posts.Add(new Post { Id = testPostId, Title = "something", Image = "something" });
+                context.Posts.Add(new Post { Id = testPostId, Title = "something" });
                 context.SaveChanges();
             }
 
@@ -125,7 +125,7 @@ namespace Insta.Tests
 
             using (var context = new RepositoryDbContext(options))
             {
-                context.Posts.Add(new Post { Id = testPostId, Title = "something", Image = "something" });
+                context.Posts.Add(new Post { Id = testPostId, Title = "something" });
                 context.Posts.FirstOrDefault(x => x.Id == testPostId).Photos.Add(new Photo { Id = testPhotoId });
                 context.SaveChanges();
             }

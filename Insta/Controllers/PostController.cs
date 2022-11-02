@@ -74,7 +74,7 @@ namespace Insta.Controllers
                     {
                         Data = serializedPost,
                         Message = "Post retrieved",
-                        Success = true
+                        Success  = true
                     };
                 }
 
@@ -251,7 +251,7 @@ namespace Insta.Controllers
                         var db = _redis.GetDatabase();
                         var result = new SuccessModel()
                         {
-                            Message = "Posts retrived",
+                            Message = "Posts retrieved",
                             Success = true
                         };
 
