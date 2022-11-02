@@ -302,12 +302,12 @@ namespace Insta.Controllers
             try
             {
                 var post = await _unitOfWork.PostRepository.GetPostByIdAsync(postId);
-                var result = _photoService.AddPhotoAsync(file);
+                var result = await _photoService.AddPhotoAsync(file);
 
                 var photo = new Photo
                 {
-                    Url = result.Result.SecureUrl.AbsoluteUri,
-                    PublicId = result.Result.PublicId
+                    Url = result.SecureUrl.AbsoluteUri,
+                    PublicId = result.PublicId
                 };
 
                 post.Photos.Add(photo);

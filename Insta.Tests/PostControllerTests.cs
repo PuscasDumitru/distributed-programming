@@ -1,4 +1,5 @@
 using AutoMapper;
+using CloudinaryDotNet.Actions;
 using Data;
 using Data.Entities;
 using Data.Repositories.Implementation;
@@ -22,9 +23,9 @@ namespace Insta.Tests
             var mockPhotoService = new Mock<IPhotoService>();
             var mockMapper = new Mock<IMapper>();
             var mockRedis = new Mock<IConnectionMultiplexer>();
-            
+
             var options = new DbContextOptionsBuilder<RepositoryDbContext>()
-                .UseInMemoryDatabase(databaseName: "PostListDatabase")
+                .UseInMemoryDatabase(databaseName: "PostListDatabase1")
                 .Options;
 
             using (var context = new RepositoryDbContext(options))
@@ -67,7 +68,7 @@ namespace Insta.Tests
                 .Returns(mockDatabase.Object);
 
             var options = new DbContextOptionsBuilder<RepositoryDbContext>()
-                .UseInMemoryDatabase(databaseName: "PostListDatabase")
+                .UseInMemoryDatabase(databaseName: "PostListDatabase2")
                 .Options;
 
             await using (var context = new RepositoryDbContext(options))
@@ -94,12 +95,17 @@ namespace Insta.Tests
         {
             var testPostId = 99;
             var mockPhotoService = new Mock<IPhotoService>();
-            var mockMapper = new Mock<IMapper>();
+            mockPhotoService.Setup(_ => _.AddPhotoAsync(It.IsAny<IFormFile>()))
+                .ReturnsAsync(new ImageUploadResult()
+                {
+                    SecureUrl = new Uri("http://localhost"),
+                    PublicId = "TestId"
+                });
             var mockRedis = new Mock<IConnectionMultiplexer>();
             var mockFormFile = new Mock<IFormFile>();
 
             var options = new DbContextOptionsBuilder<RepositoryDbContext>()
-                .UseInMemoryDatabase(databaseName: "PostListDatabase")
+                .UseInMemoryDatabase(databaseName: "PostListDatabase3")
                 .Options;
 
             using (var context = new RepositoryDbContext(options))
@@ -132,14 +138,13 @@ namespace Insta.Tests
             var mockFormFile = new Mock<IFormFile>();
 
             var options = new DbContextOptionsBuilder<RepositoryDbContext>()
-                .UseInMemoryDatabase(databaseName: "PostListDatabase")
+                .UseInMemoryDatabase(databaseName: "PostListDatabase4")
                 .Options;
 
             using (var context = new RepositoryDbContext(options))
             {
-                context.Posts.Add(new Post { Id = testPostId, Title = "something" });
-                context.Posts.FirstOrDefault(x => x.Id == testPostId).Photos.Add(new Photo { Id = testPhotoId });
-                context.SaveChanges();
+                context.Posts.Add(new Post { Id = testPostId, Title = "something", Photos = new List<Photo> { new Photo { Id = testPhotoId } } });
+                await context.SaveChangesAsync();
             }
 
             using (var context = new RepositoryDbContext(options))
