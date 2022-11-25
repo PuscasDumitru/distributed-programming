@@ -65,7 +65,17 @@ namespace Insta.Controllers
             try
             {
                 var db = _redis.GetDatabase();
-                string serializedPost = db.StringGet($"post:{postId}");
+                string serializedPost = await db.StringGetAsync($"post:{postId}");
+
+                if (serializedPost == "null")
+                {
+                    return new ErrorModel
+                    {
+                        Error = "PostNotFound",
+                        Success = false
+                    };
+                }
+
                 if (serializedPost != null)
                 {
                     return new SuccessModel
@@ -77,7 +87,7 @@ namespace Insta.Controllers
                 }
 
                 var post = await _unitOfWork.PostRepository.GetPostByIdAsync(postId);
-                db.StringSet($"post:{postId}", JsonConvert.SerializeObject(post), TimeSpan.FromMinutes(1));
+                await db.StringSetAsync($"post:{postId}", JsonConvert.SerializeObject(post), TimeSpan.FromMinutes(1));
                 return new SuccessModel
                 {
                     Data = post,
@@ -113,7 +123,7 @@ namespace Insta.Controllers
                     _unitOfWork.PostRepository.Create(post);
                     await _unitOfWork.SaveChangesAsync();
                     var db = _redis.GetDatabase();
-                    db.StringSet($"post:{post.Id}", JsonConvert.SerializeObject(post), TimeSpan.FromMinutes(1));
+                    await db.StringSetAsync($"post:{post.Id}", JsonConvert.SerializeObject(post), TimeSpan.FromMinutes(1));
                     return new SuccessModel
                     {
                         Data = post,
@@ -163,7 +173,7 @@ namespace Insta.Controllers
                     _unitOfWork.PostRepository.Update(post);
                     await _unitOfWork.SaveChangesAsync();
                     var db = _redis.GetDatabase();
-                    db.StringSet($"post:{post.Id}", JsonConvert.SerializeObject(post), TimeSpan.FromMinutes(1));
+                    await db.StringSetAsync($"post:{post.Id}", JsonConvert.SerializeObject(post), TimeSpan.FromMinutes(1));
                     return new SuccessModel
                     {
                         Data = post,
@@ -204,6 +214,8 @@ namespace Insta.Controllers
                     Post post = _unitOfWork.PostRepository.GetById(id);
                     _unitOfWork.PostRepository.Delete(post);
                     await _unitOfWork.SaveChangesAsync();
+                    var db = _redis.GetDatabase();
+                    db.KeyDelete($"post:{post.Id}");
 
                     return new SuccessModel
                     {
@@ -253,13 +265,13 @@ namespace Insta.Controllers
                             Success = true
                         };
 
-                        string serializedPosts = db.StringGet($"posts:{userId}");
+                        string serializedPosts = await db.StringGetAsync($"posts:{userId}");
 
                         if (serializedPosts == null)
                         {
                             var posts = await _unitOfWork.PostRepository.GetPostByUserIdAsync(new Guid(userId));
                             await _unitOfWork.SaveChangesAsync();
-                            db.StringSet($"posts:{userId}", JsonConvert.SerializeObject(posts), TimeSpan.FromMinutes(1));
+                            await db.StringSetAsync($"posts:{userId}", JsonConvert.SerializeObject(posts), TimeSpan.FromMinutes(1));
                             result.Data = posts;
                             return result;
                         }

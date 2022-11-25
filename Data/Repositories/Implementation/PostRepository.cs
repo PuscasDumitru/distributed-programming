@@ -17,9 +17,15 @@ namespace Data.Repositories.Implementation
 
         public async Task<Post> GetPostByIdAsync(int postId)
         {
-            return await RepositoryContext.Posts
+            var post = await RepositoryContext.Posts
                 .Include(p => p.Photos)
                 .SingleOrDefaultAsync(x => x.Id == postId);
+            if (post == null)
+            {
+                throw new ArgumentNullException(nameof(post));
+            }
+
+            return post;
         }
 
         public async Task<IEnumerable<Post>> GetPostByUserIdAsync(Guid userId)
