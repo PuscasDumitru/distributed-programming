@@ -39,6 +39,7 @@ namespace Insta
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            
             services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
             services.AddScoped<IPhotoService, PhotoService>();
             services.AddAutoMapper(typeof(Program).Assembly);
@@ -74,8 +75,6 @@ namespace Insta
             })
               .AddNewtonsoftJson(options =>
                   options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
-              
-
 
             services.AddSwaggerGen(c =>
             {
@@ -90,19 +89,19 @@ namespace Insta
                     Scheme = "Bearer"
                 });
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
                 {
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
-                }
-            },
-            new string[]{}
-        }
-    });
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                             Reference = new OpenApiReference
+                             {
+                                Type=ReferenceType.SecurityScheme,
+                                Id="Bearer"
+                             }
+                         },
+                        new string[]{}
+                     }   
+                });
             });
         }
 
@@ -112,9 +111,17 @@ namespace Insta
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Insta v1"));
             }
+
+            if (env.IsProduction())
+            {
+                using var serviceScope = app.ApplicationServices.CreateScope();
+                var context = serviceScope.ServiceProvider.GetService<RepositoryDbContext>();
+                context.Database.Migrate();
+            }
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Insta v1"));
 
             app.UseHttpsRedirection();
 

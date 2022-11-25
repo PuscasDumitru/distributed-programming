@@ -34,7 +34,7 @@ namespace Data.Repositories.Implementation
 
         public virtual void Create(T entity)
         {
-            this.RepositoryContext.Set<T>().Add(entity);
+            this.RepositoryContext.Set<T>().AddAsync(entity);
         }
 
         public virtual void Update(T entity)

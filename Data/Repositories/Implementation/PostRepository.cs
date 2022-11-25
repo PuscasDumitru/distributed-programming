@@ -10,11 +10,8 @@ namespace Data.Repositories.Implementation
 {
     public class PostRepository : GenericRepository<Post>
     {
-        public PostRepository(RepositoryDbContext repositoryContext) : base(repositoryContext)
-        {
-            RepositoryContext = repositoryContext;
-        }
-
+        public PostRepository(RepositoryDbContext repositoryContext) : base(repositoryContext) { }
+        
         public async Task<Post> GetPostByIdAsync(int postId)
         {
             var post = await RepositoryContext.Posts
