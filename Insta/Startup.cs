@@ -61,8 +61,14 @@ namespace Insta
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection"),
                 b => b.MigrationsAssembly("Insta")));
-            services.AddSingleton<IConnectionMultiplexer>(opt =>
-                ConnectionMultiplexer.Connect(Configuration.GetConnectionString("RedisConnection")));
+            /*services.AddSingleton<IConnectionMultiplexer>(opt =>
+                ConnectionMultiplexer.Connect(Configuration.GetConnectionString("RedisConnection")));*/
+
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = Configuration.GetConnectionString("RedisConnection");
+                options.InstanceName = "AzureRedisInstance";
+            });
 
             services.AddHealthChecks()
                 .AddCheck<ResponseTimeHealthCheck>("Network speed test", null);

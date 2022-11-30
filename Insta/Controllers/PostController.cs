@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Insta.Controllers
 {
@@ -24,14 +25,14 @@ namespace Insta.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPhotoService _photoService;
-        private readonly IConnectionMultiplexer _redis;
+        private readonly IDistributedCache _cache;
         private const int Timeout = 4000;
 
-        public PostController(RepositoryDbContext context, IPhotoService photoService,  IConnectionMultiplexer redis)
+        public PostController(RepositoryDbContext context, IPhotoService photoService,  IDistributedCache cache)
         {
             _unitOfWork = new UnitOfWork(context);
             _photoService = photoService;
-            _redis = redis;
+            _cache = cache;
         }
 
         [HttpGet]
@@ -64,8 +65,7 @@ namespace Insta.Controllers
         {
             try
             {
-                var db = _redis.GetDatabase();
-                string serializedPost = await db.StringGetAsync($"post:{postId}");
+                string serializedPost = await _cache.GetStringAsync($"post:{postId}");
 
                 if (serializedPost == "null")
                 {
@@ -87,7 +87,9 @@ namespace Insta.Controllers
                 }
 
                 var post = await _unitOfWork.PostRepository.GetPostByIdAsync(postId);
-                await db.StringSetAsync($"post:{postId}", JsonConvert.SerializeObject(post), TimeSpan.FromMinutes(1));
+                var options = new DistributedCacheEntryOptions()
+                    .SetSlidingExpiration(TimeSpan.FromSeconds(20));
+                await _cache.SetStringAsync($"post:{postId}", JsonConvert.SerializeObject(post), options);
                 return new SuccessModel
                 {
                     Data = post,
@@ -122,8 +124,9 @@ namespace Insta.Controllers
                     }
                     _unitOfWork.PostRepository.Create(post);
                     await _unitOfWork.SaveChangesAsync();
-                    var db = _redis.GetDatabase();
-                    await db.StringSetAsync($"post:{post.Id}", JsonConvert.SerializeObject(post), TimeSpan.FromMinutes(1));
+                    var options = new DistributedCacheEntryOptions()
+                        .SetSlidingExpiration(TimeSpan.FromSeconds(20));
+                    await _cache.SetStringAsync($"post:{post.Id}", JsonConvert.SerializeObject(post), options);
                     return new SuccessModel
                     {
                         Data = post,
@@ -172,8 +175,9 @@ namespace Insta.Controllers
 
                     _unitOfWork.PostRepository.Update(post);
                     await _unitOfWork.SaveChangesAsync();
-                    var db = _redis.GetDatabase();
-                    await db.StringSetAsync($"post:{post.Id}", JsonConvert.SerializeObject(post), TimeSpan.FromMinutes(1));
+                    var options = new DistributedCacheEntryOptions()
+                        .SetSlidingExpiration(TimeSpan.FromSeconds(20));
+                    await _cache.SetStringAsync($"post:{post.Id}", JsonConvert.SerializeObject(post), options);
                     return new SuccessModel
                     {
                         Data = post,
@@ -214,8 +218,7 @@ namespace Insta.Controllers
                     Post post = _unitOfWork.PostRepository.GetById(id);
                     _unitOfWork.PostRepository.Delete(post);
                     await _unitOfWork.SaveChangesAsync();
-                    var db = _redis.GetDatabase();
-                    db.KeyDelete($"post:{post.Id}");
+                    await _cache.RemoveAsync($"post:{post.Id}");
 
                     return new SuccessModel
                     {
@@ -258,20 +261,21 @@ namespace Insta.Controllers
                     {
                         IEnumerable<Claim> claims = identity.Claims;
                         var userId = identity.FindFirst("userId").Value;
-                        var db = _redis.GetDatabase();
                         var result = new SuccessModel()
                         {
                             Message = "Posts retrieved",
                             Success = true
                         };
 
-                        string serializedPosts = await db.StringGetAsync($"posts:{userId}");
+                        string serializedPosts = await _cache.GetStringAsync($"posts:{userId}");
 
                         if (serializedPosts == null)
                         {
                             var posts = await _unitOfWork.PostRepository.GetPostByUserIdAsync(new Guid(userId));
                             await _unitOfWork.SaveChangesAsync();
-                            await db.StringSetAsync($"posts:{userId}", JsonConvert.SerializeObject(posts), TimeSpan.FromMinutes(1));
+                            var options = new DistributedCacheEntryOptions()
+                                .SetSlidingExpiration(TimeSpan.FromSeconds(20));
+                            await _cache.SetStringAsync($"posts:{userId}", JsonConvert.SerializeObject(posts), options);
                             result.Data = posts;
                             return result;
                         }
